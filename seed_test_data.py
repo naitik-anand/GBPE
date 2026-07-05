@@ -13,7 +13,10 @@ def main():
     c.execute('DELETE FROM students')
     conn.commit()
 
-    # Insert 5 roll-number test accounts (no Google needed because backend login only checks rollNo in DB)
+    # Insert 5 roll-number test accounts with no googleUid on file. The
+    # backend now requires a verified Google token to log in *only* when a
+    # student record has a googleUid saved — these seeded accounts have
+    # none, so they intentionally stay easy to log into for local testing.
     now = int(time.time() * 1000)
     students = [
         ('240001', 'Student One'),

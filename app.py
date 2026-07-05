@@ -2,14 +2,85 @@ import sqlite3
 import json
 import uuid
 import time
-from flask import Flask, request, jsonify, send_from_directory
+import functools
+from flask import Flask, request, jsonify, send_from_directory, session
 from flask_cors import CORS
 import os
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(app)
+
+# --- Session / cookie config ---------------------------------------------
+# SECRET_KEY signs the session cookie. Set QUIZFORGE_SECRET_KEY in your
+# environment for real deployments — the fallback below is only for local
+# testing and is NOT safe to ship as-is.
+app.secret_key = os.environ.get('QUIZFORGE_SECRET_KEY', 'dev-only-change-this-secret-key')
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# supports_credentials lets the browser send/receive the session cookie.
+# Since this Flask app also serves the frontend (same origin), this mostly
+# matters if you ever split frontend/backend onto different hosts/ports.
+CORS(app, supports_credentials=True)
 
 DB_FILE = 'quizforge.db'
+
+# --- Admin password ---------------------------------------------------
+# Set QUIZFORGE_ADMIN_PASSWORD in your environment. Falls back to the old
+# default only so the app keeps working out of the box for local testing.
+ADMIN_PASSWORD = os.environ.get('QUIZFORGE_ADMIN_PASSWORD', 'admin123')
+
+# --- Google Sign-In verification ---------------------------------------
+# To make "Sign in with Google" actually mean something server-side, set
+# GOOGLE_OAUTH_CLIENT_ID to your Firebase web app's OAuth Client ID
+# (Google Cloud Console -> APIs & Services -> Credentials -> OAuth 2.0
+# Client IDs -> the "Web client (auto created by Google Service)" entry,
+# looks like "1234567890-abc...apps.googleusercontent.com").
+#
+# Until this is set, the server can't cryptographically verify Google
+# tokens, so registration/login fall back to trusting whatever the client
+# says (the old behavior) — it's a soft flag, not a hard requirement, so
+# the app doesn't break for anyone who hasn't configured this yet.
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
+
+
+def verify_google_id_token(id_token_str):
+    """Verify a Google Sign-In ID token server-side.
+
+    Returns {"uid":..., "email":...} on success, or None if verification
+    is unavailable (no client ID configured) or the token is invalid.
+    Requires the `google-auth` package: pip install google-auth
+    """
+    if not id_token_str or not GOOGLE_OAUTH_CLIENT_ID:
+        return None
+    try:
+        from google.oauth2 import id_token as google_id_token
+        from google.auth.transport import requests as google_requests
+        info = google_id_token.verify_oauth2_token(
+            id_token_str, google_requests.Request(), GOOGLE_OAUTH_CLIENT_ID
+        )
+        return {"uid": info.get("sub"), "email": info.get("email")}
+    except Exception:
+        return None
+
+
+def require_admin(fn):
+    """Protects admin API routes. Must be logged in via /api/admin/pw first."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not session.get('is_admin'):
+            return jsonify({"error": "Admin authentication required"}), 401
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+def require_student(fn):
+    """Protects student API routes that must be tied to a real logged-in student."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not session.get('rollNo'):
+            return jsonify({"error": "Login required"}), 401
+        return fn(*args, **kwargs)
+    return wrapper
 
 def get_db():
     conn = sqlite3.connect(DB_FILE)
@@ -73,42 +144,78 @@ def register():
     data = request.json
     rollNo = data.get('rollNo')
     name = data.get('name')
+    id_token_str = data.get('idToken')
     if not rollNo or not name:
         return jsonify({"error": "Roll Number and Name are required"}), 400
-    
+
+    google_info = verify_google_id_token(id_token_str)
+    if GOOGLE_OAUTH_CLIENT_ID and not google_info:
+        return jsonify({"error": "Google verification failed. Please sign in with Google again."}), 401
+
+    googleEmail = google_info['email'] if google_info else data.get('googleEmail', '')
+    googleUid = google_info['uid'] if google_info else data.get('googleUid', '')
+
     with get_db() as conn:
         c = conn.cursor()
-        # Check if roll exists
         c.execute("SELECT * FROM students WHERE rollNo = ?", (rollNo,))
         if c.fetchone():
             return jsonify({"error": "Roll number already registered"}), 400
         
         c.execute("INSERT INTO students (rollNo, name, dob, googleEmail, googleUid, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                  (rollNo, name, data.get('dob', ''), data.get('googleEmail', ''), data.get('googleUid', ''), int(time.time()*1000)))
+                  (rollNo, name, data.get('dob', ''), googleEmail, googleUid, int(time.time()*1000)))
         conn.commit()
-    
-    return jsonify({"success": True, "student": {"rollNo": rollNo, "name": name, "googleEmail": data.get('googleEmail', '')}})
+
+    session.clear()
+    session['rollNo'] = rollNo
+    session['studentName'] = name
+
+    return jsonify({"success": True, "student": {"rollNo": rollNo, "name": name, "googleEmail": googleEmail}})
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
     rollNo = data.get('rollNo')
+    id_token_str = data.get('idToken')
     with get_db() as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM students WHERE rollNo = ?", (rollNo,))
         student = c.fetchone()
         if not student:
             return jsonify({"error": "Roll number not found"}), 404
-        
+
+        if GOOGLE_OAUTH_CLIENT_ID and student['googleUid']:
+            google_info = verify_google_id_token(id_token_str)
+            if not google_info or google_info['uid'] != student['googleUid']:
+                return jsonify({"error": "Google verification failed for this roll number"}), 401
+
+        session.clear()
+        session['rollNo'] = student['rollNo']
+        session['studentName'] = student['name']
+
         return jsonify({"success": True, "student": {"rollNo": student['rollNo'], "name": student['name'], "googleEmail": student['googleEmail']}})
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    session.pop('rollNo', None)
+    session.pop('studentName', None)
+    return jsonify({"success": True})
 
 @app.route('/api/admin/pw', methods=['POST'])
 def admin_pw():
     data = request.json
-    # Hardcoded check for simplicity, in a real app this would use secure config
-    if data.get('pw') == 'admin123':
+    if data.get('pw') == ADMIN_PASSWORD:
+        session['is_admin'] = True
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Incorrect password"}), 401
+
+@app.route('/api/admin/logout', methods=['POST'])
+def admin_logout():
+    session.pop('is_admin', None)
+    return jsonify({"success": True})
+
+@app.route('/api/admin/check', methods=['GET'])
+def admin_check():
+    return jsonify({"isAdmin": bool(session.get('is_admin'))})
 
 
 # --- Test Management API ---
@@ -132,6 +239,7 @@ def get_tests():
     return jsonify({"tests": tests})
 
 @app.route('/api/admin/tests', methods=['GET'])
+@require_admin
 def get_admin_tests():
     # Includes everything (solutions + correct answers)
     with get_db() as conn:
@@ -147,6 +255,7 @@ def get_admin_tests():
     return jsonify({"tests": tests})
 
 @app.route('/api/admin/tests/<test_id>', methods=['GET'])
+@require_admin
 def get_admin_test(test_id):
     with get_db() as conn:
         c = conn.cursor()
@@ -162,6 +271,7 @@ def get_admin_test(test_id):
 
 
 @app.route('/api/admin/tests', methods=['POST'])
+@require_admin
 def save_test():
     data = request.json
     test_id = data.get('id', uuid.uuid4().hex)
@@ -189,6 +299,7 @@ def save_test():
     return jsonify({"success": True, "id": test_id})
 
 @app.route('/api/admin/tests/<test_id>', methods=['DELETE'])
+@require_admin
 def delete_test(test_id):
     with get_db() as conn:
         c = conn.cursor()
@@ -225,9 +336,13 @@ def get_test(test_id):
 
 
 @app.route('/api/tests/<test_id>/submit', methods=['POST'])
+@require_student
 def submit_test(test_id):
     data = request.json
-    rollNo = data.get('rollNo')
+    # Trust the server session for identity, not whatever rollNo the client
+    # sends — otherwise anyone could submit a test "as" another student.
+    rollNo = session['rollNo']
+    studentName = session.get('studentName', data.get('studentName', ''))
     answers = data.get('answers', {})
     
     with get_db() as conn:
@@ -288,7 +403,7 @@ def submit_test(test_id):
         c.execute("""INSERT INTO submissions 
                      (id, testId, testTitle, rollNo, studentName, answers, score, maxScore, correct, incorrect, unanswered, total, timestamp)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                  (sub_id, test_id, t['title'], rollNo, data.get('studentName',''), json.dumps(answers),
+                  (sub_id, test_id, t['title'], rollNo, studentName, json.dumps(answers),
                    score, maxScore, correct_count, incorrect_count, unanswered_count, len(questions), int(time.time()*1000)))
         conn.commit()
     
@@ -302,8 +417,11 @@ def submit_test(test_id):
     })
 
 @app.route('/api/tests/<test_id>/solutions', methods=['GET'])
+@require_student
 def get_solutions(test_id):
-    rollNo = request.args.get('rollNo')
+    # Trust the session, not a client-supplied query param, so students
+    # can't view another roll number's solutions by editing the URL.
+    rollNo = session['rollNo']
     # Make sure this student submitted the test
     with get_db() as conn:
         c = conn.cursor()
@@ -324,6 +442,7 @@ def get_solutions(test_id):
 
 # --- Admin Extra APIs ---
 @app.route('/api/admin/submissions', methods=['GET'])
+@require_admin
 def get_admin_submissions():
     with get_db() as conn:
         c = conn.cursor()

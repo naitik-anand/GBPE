@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QuizForge — Student Portal</title>
+<title>GBPE Exam Portal — Student Portal</title>
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/index.css">
 </head>
@@ -13,8 +13,8 @@
 <div id="screen-auth" style="display:none">
   <div class="auth-panel">
     <div class="auth-header">
-      <span class="logo">Quiz<span>Forge</span></span>
-      <p>Computer Based Test Platform<br>Sign in or register to access your tests</p>
+      <span class="logo">GBPE <span>Exam Portal</span></span>
+      <p><i>An Autonomous Education Authority</i><br>Sign in or register to access your tests</p>
     </div>
     <div id="auth-panel-body">
       <!-- Rendered by app.js -->
@@ -27,7 +27,7 @@
 
   <!-- Topbar -->
   <div class="topbar">
-    <div class="logo">Quiz<span>Forge</span></div>
+    <div class="logo">GBPE<span> Exam Portal</span></div>
     <div class="topbar-sep"></div>
     <span style="font-size:12px;color:var(--text-muted)">Student Portal</span>
     <div class="sp"></div>
@@ -64,16 +64,19 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-  // TODO: Replace these placeholder values with your real Firebase config.
-  // Without a valid apiKey, Firebase will throw:
-  //   auth/api-key-not-valid.
+  // Same Firebase project as admin.html — one Google identity works for
+  // both student and admin sign-in. A Firebase web apiKey is not a secret
+  // (it just identifies the project to Google's servers); real security
+  // comes from the server verifying the ID token in app.py, not from
+  // hiding this value.
   const firebaseConfig = {
-    apiKey: "PASTE",
-    authDomain: "PASTE",
-    projectId: "PASTE",
-    storageBucket: "PASTE",
-    messagingSenderId: "PASTE",
-    appId: "PASTE"
+    apiKey: "AIzaSyCGE_VPX9WH7hNGSH4xPWI2xNmw18OL01Y",
+    authDomain: "gbpe-f3350.firebaseapp.com",
+    projectId: "gbpe-f3350",
+    storageBucket: "gbpe-f3350.firebasestorage.app",
+    messagingSenderId: "53189465453",
+    appId: "1:53189465453:web:44938382b175f4d331f664",
+    measurementId: "G-FW8CW37B7K"
   };
 
 
