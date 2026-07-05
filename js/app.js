@@ -58,7 +58,7 @@ function renderRegForm() {
     <form class="auth-form" onsubmit="handleRegister(event)">
       <div class="fld">
         <label>Full Name *</label>
-        <input class="inp" id="reg-name" placeholder="e.g. Naitik Sharma" autocomplete="name" required>
+        <input class="inp" id="reg-name" placeholder="e.g. Aman Nigga" autocomplete="name" required>
       </div>
       <div class="g2">
         <div class="fld">

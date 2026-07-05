@@ -51,8 +51,11 @@ function parseMD(str) {
 // AUTH
 // ═══════════════════════════════════════════════════════════════
 async function init() {
-  const saved = sessionStorage.getItem('qf_admin_auth');
-  if (saved === 'ok') { A.loggedIn = true; showAdmin(); }
+  // Ask the server whether this browser actually has an authenticated admin
+  // session — sessionStorage alone can be set by hand in devtools, so it's
+  // not something the app should trust for gating the real admin API.
+  const isAdmin = await DB.checkAdminSession();
+  if (isAdmin) { A.loggedIn = true; showAdmin(); }
   else { $('admin-login').style.display='flex'; $('admin-shell').style.display='none'; }
 }
 
@@ -61,7 +64,7 @@ async function doLogin(e) {
   const pw = $('admin-pw')?.value;
   const res = await DB.checkAdminPw(pw);
   if (res && res.success) {
-    sessionStorage.setItem('qf_admin_auth','ok');
+    // Server has set the session cookie at this point — no local flag needed.
     A.loggedIn = true; showAdmin();
   } else {
     const err = $('login-err');
@@ -69,8 +72,8 @@ async function doLogin(e) {
   }
 }
 
-function doLogout() {
-  sessionStorage.removeItem('qf_admin_auth');
+async function doLogout() {
+  await DB.adminLogout();
   A.loggedIn = false;
   $('admin-login').style.display='flex';
   $('admin-shell').style.display='none';

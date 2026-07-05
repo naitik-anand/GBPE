@@ -12,14 +12,19 @@ const DB = (() => {
   const sset = (k,v) => sessionStorage.setItem(k, JSON.stringify(v));
   
   // Basic fetch wrapper
+  // credentials:'include' is required so the browser sends/stores the
+  // server session cookie (admin login, student login) on every call.
   async function apiCall(endpoint, method='GET', body=null) {
-    const opts = { method, headers: {} };
+    const opts = { method, headers: {}, credentials: 'include' };
     if (body) {
       opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);
     }
     const res = await fetch(endpoint, opts);
-    return res.json();
+    let data;
+    try { data = await res.json(); } catch (e) { data = {}; }
+    if (!res.ok && !data.error) data.error = `Request failed (${res.status})`;
+    return data;
   }
 
   // Generate local UID for transient lists
@@ -90,11 +95,23 @@ const DB = (() => {
     async register(data) {
       return await apiCall('/api/auth/register', 'POST', data);
     },
-    async login(rollNo) {
-      return await apiCall('/api/auth/login', 'POST', { rollNo });
+    async login(rollNo, idToken) {
+      return await apiCall('/api/auth/login', 'POST', { rollNo, idToken });
+    },
+    async logout() {
+      // Clears the server-side session cookie. Fire-and-forget is fine —
+      // clearSession() below already wipes the local UI cache.
+      return await apiCall('/api/auth/logout', 'POST');
     },
     async checkAdminPw(pw) {
       return await apiCall('/api/admin/pw', 'POST', { pw });
+    },
+    async adminLogout() {
+      return await apiCall('/api/admin/logout', 'POST');
+    },
+    async checkAdminSession() {
+      const res = await apiCall('/api/admin/check');
+      return !!(res && res.isAdmin);
     },
     getSession() { return sget(K_SESSION); },
     setSession(student) { sset(K_SESSION, student); },

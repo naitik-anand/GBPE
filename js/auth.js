@@ -29,10 +29,14 @@ const Auth = (() => {
     }
     const { auth, provider, signInWithPopup } = window.__firebaseAuth;
     const result = await signInWithPopup(auth, provider);
+    // Grab the ID token so the server can independently verify this sign-in
+    // rather than just trusting whatever uid/email the client reports.
+    const idToken = await result.user.getIdToken();
     return {
       uid: result.user.uid,
       email: result.user.email,
       name: result.user.displayName || '',
+      idToken,
     };
   }
 
@@ -91,6 +95,7 @@ const Auth = (() => {
 
     logout() {
       DB.clearSession();
+      DB.logout(); // clears the server-side session cookie too (fire-and-forget)
       _googleResult = null;
     },
 
@@ -108,6 +113,7 @@ const Auth = (() => {
         dob:         data.dob,
         googleEmail: _googleResult.email,
         googleUid:   _googleResult.uid,
+        idToken:     _googleResult.idToken,
       };
       
       try {
@@ -129,7 +135,7 @@ const Auth = (() => {
       if (!_googleResult)                  return { error: 'Please verify with Google first' };
 
       try {
-        const res = await DB.login(rollNo);
+        const res = await DB.login(rollNo, _googleResult.idToken);
         if (res.error) return { error: res.error };
         
         DB.setSession(res.student);
