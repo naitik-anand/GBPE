@@ -1,0 +1,210 @@
+/* ╔══════════════════════════════════════════════════════╗
+   ║  QuizForge — Index / Registration / Browse Styles   ║
+   ╚══════════════════════════════════════════════════════╝ */
+
+/* ── Layout ────────────────────────────────────────── */
+body { min-height:100vh; }
+
+#app { min-height:100vh; }
+
+.page-wrap {
+  max-width:980px; margin:0 auto; padding:28px 20px;
+}
+
+/* ── Auth Screen ───────────────────────────────────── */
+#screen-auth {
+  min-height:100vh; display:flex; align-items:center;
+  justify-content:center; padding:24px;
+  background:
+    radial-gradient(ellipse 60% 60% at 20% 80%, rgba(48,112,208,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 80% 20%, rgba(232,160,32,.06) 0%, transparent 60%),
+    var(--bg);
+}
+
+.auth-panel {
+  width:100%; max-width:440px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+  box-shadow:var(--shadow-lg);
+}
+
+.auth-header {
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  padding:24px 28px 22px;
+  text-align:center;
+}
+
+.auth-header .logo {
+  font-size:22px; margin-bottom:6px; display:block;
+}
+
+.auth-header p {
+  font-size:12px; color:var(--text-muted); line-height:1.5;
+}
+
+.auth-tabs {
+  display:flex; border-bottom:1px solid var(--border);
+}
+
+.auth-tab {
+  flex:1; padding:13px; text-align:center;
+  font-size:13px; font-weight:500; color:var(--text-muted);
+  background:transparent; border:none;
+  border-bottom:2px solid transparent;
+  transition:all .15s; cursor:pointer;
+}
+
+.auth-tab.active {
+  color:var(--accent); border-bottom-color:var(--accent);
+  background:var(--accent-dim);
+}
+
+.auth-body { padding:24px 28px 28px; }
+
+.auth-form { display:flex; flex-direction:column; gap:14px; }
+
+/* ── Google Button ─────────────────────────────────── */
+.btn-google {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  width:100%; padding:11px 16px; border-radius:var(--radius);
+  background:var(--surface3); border:1.5px solid var(--border3);
+  color:var(--text); font-size:13px; font-weight:500;
+  cursor:pointer; transition:all .15s; font-family:var(--font);
+}
+.btn-google:hover { background:var(--surface4); border-color:var(--blue); }
+.btn-google.verified { border-color:var(--green); color:var(--green); background:var(--green-dim); }
+.btn-google.loading { opacity:.7; cursor:wait; }
+
+.google-icon {
+  width:18px; height:18px; flex-shrink:0;
+}
+
+.auth-note {
+  font-size:11px; color:var(--text-muted); text-align:center;
+  margin-top:6px; line-height:1.5;
+}
+
+.auth-note a { color:var(--accent); }
+
+/* Google required badge */
+.req-google {
+  display:flex; align-items:center; gap:8px;
+  padding:9px 13px; border-radius:var(--radius-sm);
+  background:var(--accent-dim); border:1px solid rgba(232,160,32,.2);
+  font-size:12px; color:var(--accent);
+}
+
+/* ── Roll No Input ─────────────────────────────────── */
+.roll-hint {
+  font-size:11px; color:var(--text-muted);
+  display:flex; align-items:center; gap:5px; margin-top:3px;
+}
+.roll-hint.ok  { color:var(--green); }
+.roll-hint.err { color:var(--red); }
+
+/* ── Student Home ──────────────────────────────────── */
+#screen-home { min-height:100vh; }
+
+.student-bar {
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  padding:12px 20px;
+  display:flex; align-items:center; gap:14px;
+  font-size:13px;
+}
+
+.student-bar .sname {
+  font-weight:600; color:var(--text);
+}
+
+.student-bar .sroll {
+  font-family:var(--mono); font-size:12px;
+  color:var(--text-muted); background:var(--surface3);
+  padding:2px 8px; border-radius:var(--radius-sm);
+}
+
+/* ── Page header ───────────────────────────────────── */
+.pg-header {
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:24px; flex-wrap:wrap;
+}
+.pg-header h1 { font-size:20px; font-weight:700; flex:1; }
+
+/* ── Tests Grid ────────────────────────────────────── */
+.tests-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(290px,1fr));
+  gap:14px;
+}
+
+.test-card {
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--radius-lg);
+  padding:20px;
+  display:flex; flex-direction:column; gap:12px;
+  transition:border-color .18s, box-shadow .18s;
+}
+
+.test-card:hover {
+  border-color:var(--border3);
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+
+.tc-title {
+  font-size:16px; font-weight:700; line-height:1.3;
+  color:var(--text);
+}
+
+.tc-desc {
+  font-size:13px; color:var(--text-muted);
+  line-height:1.55; flex:1;
+}
+
+.tc-meta {
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+
+.tc-marking {
+  font-size:12px; color:var(--text-muted);
+  padding:7px 10px;
+  background:var(--surface2); border-radius:var(--radius-sm);
+  display:flex; gap:14px;
+}
+.tc-marking span { display:flex; align-items:center; gap:4px; }
+
+.tc-footer {
+  padding-top:12px; border-top:1px solid var(--border);
+}
+
+.tc-attempted {
+  display:flex; align-items:center; gap:7px;
+  padding:9px 12px; border-radius:var(--radius-sm);
+  background:var(--green-dim); border:1px solid rgba(40,160,101,.2);
+  font-size:12px; color:var(--green); font-weight:500;
+}
+
+/* ── Filter Bar ────────────────────────────────────── */
+.filter-bar {
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:20px; flex-wrap:wrap;
+}
+
+.filter-bar input {
+  flex:1; min-width:200px; max-width:320px;
+  padding:8px 12px; background:var(--surface2);
+  border:1.5px solid var(--border2); border-radius:var(--radius);
+  color:var(--text); font-size:13px; outline:none;
+}
+.filter-bar input:focus { border-color:var(--blue); }
+.filter-bar input::placeholder { color:var(--text-dim); }
+
+/* ── Responsive ────────────────────────────────────── */
+@media(max-width:600px) {
+  .auth-body { padding:20px; }
+  .auth-header { padding:20px; }
+  .tests-grid { grid-template-columns:1fr; }
+}
