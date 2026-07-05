@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizForge — Admin</title>
+<!-- No link to this page exists in index.html or test.html -->
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- ═══ ADMIN LOGIN ═══════════════════════════════ -->
+<div id="admin-login" style="display:none">
+  <div class="admin-login-box">
+    <div class="logo-wrap">
+      <div class="logo">Quiz<span style="color:var(--accent)">Forge</span></div>
+      <div class="admin-badge">⚙ Admin Panel</div>
+    </div>
+    <form onsubmit="doLogin(event)">
+      <div class="fld" style="margin-bottom:14px">
+        <label>Admin Password</label>
+        <input class="inp" type="password" id="admin-pw" placeholder="Enter password..." autocomplete="current-password">
+      </div>
+      <div id="login-err" class="fld-err" style="display:none"></div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:4px">Login →</button>
+    </form>
+    <div style="margin-top:16px;font-size:11px;color:var(--text-dim);text-align:center">
+      Default: <code style="color:var(--text-muted);background:var(--surface2);padding:1px 6px;border-radius:3px">admin123</code>
+      — change in DB.setAdminPw()
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN SHELL ════════════════════════════════ -->
+<div id="admin-shell" style="display:none;flex-direction:column;min-height:100vh">
+
+  <!-- Topbar -->
+  <div class="admin-topbar">
+    <div class="logo">Quiz<span style="color:var(--accent)">Forge</span></div>
+    <div class="topbar-sep"></div>
+    <div class="breadcrumb" id="breadcrumb">
+      <span>Dashboard</span>
+    </div>
+    <div class="sp"></div>
+    <span class="badge b-amber">⚙ Admin</span>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
+  </div>
+
+  <!-- Content area -->
+  <div class="admin-content" id="admin-content">
+    <!-- Rendered by admin.js -->
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCGE_VPX9WH7hNGSH4xPWI2xNmw18OL01Y",
+    authDomain: "gbpe-f3350.firebaseapp.com",
+    projectId: "gbpe-f3350",
+    storageBucket: "gbpe-f3350.firebasestorage.app",
+    messagingSenderId: "53189465453",
+    appId: "1:53189465453:web:44938382b175f4d331f664",
+    measurementId: "G-FW8CW37B7K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  window.__firebaseAuth = { auth, provider, signInWithPopup };
+</script>
+
+<script src="js/db.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

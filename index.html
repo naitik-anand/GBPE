@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizForge — Student Portal</title>
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+
+<!-- ═══ AUTH SCREEN ═══════════════════════════════ -->
+<div id="screen-auth" style="display:none">
+  <div class="auth-panel">
+    <div class="auth-header">
+      <span class="logo">Quiz<span>Forge</span></span>
+      <p>Computer Based Test Platform<br>Sign in or register to access your tests</p>
+    </div>
+    <div id="auth-panel-body">
+      <!-- Rendered by app.js -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STUDENT HOME ══════════════════════════════ -->
+<div id="screen-home" style="display:none">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo">Quiz<span>Forge</span></div>
+    <div class="topbar-sep"></div>
+    <span style="font-size:12px;color:var(--text-muted)">Student Portal</span>
+    <div class="sp"></div>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
+  </div>
+
+  <!-- Student info bar -->
+  <div class="student-bar">
+    <span class="sname" id="bar-name"></span>
+    <span class="sroll" id="bar-roll"></span>
+    <span style="color:var(--text-dim);font-size:12px" id="bar-email"></span>
+    <div class="sp"></div>
+    <span class="badge b-green">● Online</span>
+  </div>
+
+  <!-- Content -->
+  <div class="page-wrap">
+    <div class="pg-header">
+      <h1>Available Tests</h1>
+    </div>
+    <div class="filter-bar">
+      <input type="search" placeholder="Search tests..." oninput="renderTests(this.value)">
+    </div>
+    <div id="tests-grid" class="tests-grid">
+      <!-- Rendered by app.js -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-wrap"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+  // TODO: Replace these placeholder values with your real Firebase config.
+  // Without a valid apiKey, Firebase will throw:
+  //   auth/api-key-not-valid.
+  const firebaseConfig = {
+    apiKey: "PASTE",
+    authDomain: "PASTE",
+    projectId: "PASTE",
+    storageBucket: "PASTE",
+    messagingSenderId: "PASTE",
+    appId: "PASTE"
+  };
+
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  window.__firebaseAuth = { auth, provider, signInWithPopup };
+</script>
+
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

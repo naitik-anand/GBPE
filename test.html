@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizForge — Test</title>
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/test.css">
+</head>
+<body>
+
+<!-- Loading -->
+<div id="test-loading">
+  <div class="spinner"></div>
+  <span style="font-size:13px;color:var(--text-muted)">Loading test...</span>
+</div>
+
+<!-- Start Splash Screen -->
+<div id="fs-start" style="display:none; height:100vh; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:20px;">
+  <h2 style="margin-bottom:15px">Ready to start?</h2>
+  <p style="color:var(--text-muted); margin-bottom:25px; max-width:400px; line-height:1.6">
+    This test runs in FULLSCREEN mode. Switching tabs, exiting fullscreen, or losing window focus will result in auto-submission and warnings.
+  </p>
+  <button class="btn btn-primary btn-xl" onclick="initFullscreenAndStart()">Start Test in Fullscreen ↗</button>
+</div>
+
+<!-- ═══ TEST SHELL ════════════════════════════════ -->
+<div id="test-shell" style="display:none">
+
+  <!-- Header -->
+  <div class="test-header">
+    <div class="logo" style="font-size:14px">Quiz<span>Forge</span></div>
+    <div class="topbar-sep"></div>
+    <div class="th-exam" id="th-title">—</div>
+    <div class="sp"></div>
+    <div class="th-student">
+      <span class="sname" id="th-sname"></span>
+      <span class="sroll" id="th-sroll"></span>
+    </div>
+    <div class="timer-wrap">
+      <span class="timer-label">Time Left</span>
+      <span class="timer-val" id="timer-val">00:00</span>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="confirmSubmit()">Submit Test</button>
+  </div>
+
+  <!-- Section bar -->
+  <div class="section-bar">
+    Section: <span id="section-bar-info">—</span>
+    &nbsp;|&nbsp;
+    <span id="q-num-label" style="color:var(--accent)">Q 1 / 1</span>
+  </div>
+
+  <!-- Body -->
+  <div class="test-body">
+
+    <!-- Question Panel -->
+    <div class="q-panel">
+      <div class="q-meta">
+        <span class="q-num" id="q-num-label2"></span>
+        <span class="q-type" id="q-type-label"></span>
+        <div class="q-marks" id="q-marks-info"></div>
+      </div>
+      <div class="q-text" id="q-text"></div>
+      <div id="answer-container"></div>
+    </div>
+
+    <!-- Palette Panel -->
+    <div class="palette-panel">
+      <div class="palette-head">
+        Question Palette
+        <span id="palette-count" style="color:var(--accent);font-family:var(--mono)">0/0</span>
+      </div>
+      <div class="palette-scroll">
+        <div class="palette-grid" id="palette-grid"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--surface3);border-color:var(--border2)"></div>Not Visited</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--red-dim);border-color:var(--red)"></div>Not Answered</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green-dim);border-color:var(--green)"></div>Answered</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--orange-dim);border-color:var(--orange)"></div>Marked for Review</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--purple-dim);border-color:var(--purple)"></div>Ans + Marked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="test-footer">
+    <button class="btn btn-ghost" id="btn-prev" onclick="prevQ()">← Prev</button>
+    <button class="btn-review" id="btn-review" onclick="toggleReview()">🔖 Mark for Review</button>
+    <div class="sp"></div>
+    <button class="btn btn-blue" id="btn-next" onclick="nextQ()">Save &amp; Next →</button>
+    <button class="btn btn-green btn-lg" id="btn-submit" onclick="confirmSubmit()" style="display:none">Submit Test ✓</button>
+  </div>
+
+</div><!-- /test-shell -->
+
+<!-- Results (moved outside shell to show when shell hides) -->
+<div id="results-screen"></div>
+
+<!-- ═══ FULLSCREEN WARNING ════════════════════════ -->
+<div id="fs-overlay" style="display:none">
+  <div class="fs-box">
+    <div class="fs-icon">⚠️</div>
+    <h2>Fullscreen Exited!</h2>
+    <p>This test requires fullscreen mode.<br>Return to fullscreen immediately or your test will be submitted.</p>
+    <div class="fs-count" id="fs-count">10</div>
+    <div class="fs-count-label">seconds remaining</div>
+    <button class="btn btn-primary btn-xl btn-block" onclick="reEnterFullscreen()">
+      ↗ Return to Fullscreen
+    </button>
+  </div>
+</div>
+
+<!-- Tab Switch Warning -->
+<div id="tab-warn" style="display:none"></div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="js/db.js"></script>
+<script src="js/test.js"></script>
+</body>
+</html>
